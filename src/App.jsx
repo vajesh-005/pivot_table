@@ -3,7 +3,6 @@ import Papa from "papaparse";
 import "./App.css";
 
 
-
 function App() {
     const [csvData, setCsvData] = useState([]);
     const [previewHeaders, setPreviewHeaders] = useState([]);
@@ -39,11 +38,11 @@ function App() {
         const rowKeysSet = new Set();
         const colKeysSet = new Set();
 
-        const countStore = {}; // Needed for average calculations
+        const countStore = {}; 
 
         csvData.forEach((row) => {
-            const rowKey = rowFields.map((f) => row[f]).join(" | ");
-            const colKey = colFields.map((f) => row[f]).join(" | ");
+            const rowKey = rowFields.map((f) => row[f]).join(" / ");
+            const colKey = colFields.map((f) => row[f]).join(" / ");
 
             rowKeysSet.add(rowKey);
             colKeysSet.add(colKey);
@@ -60,7 +59,8 @@ function App() {
 
                 if (aggType === "count") {
                     result[rowKey][colKey][field] = (result[rowKey][colKey][field] || 0) + 1;
-                } else {
+                } 
+                else {
                     if (!result[rowKey][colKey][field]) {
                         result[rowKey][colKey][field] = aggType === "min" ? value : 0;
                     }
@@ -142,82 +142,82 @@ function App() {
                             <div>
                                 <label>Row Fields:</label>
                                 <div className="controls-div">
-                                {previewHeaders.map((header) => (
-                                    <div key={"row-" + header}>
-                                        <input
-                                            type="checkbox"
-                                            checked={rowFields.includes(header)}
-                                            onChange={(e) =>
-                                                setRowFields((prev) =>
-                                                    e.target.checked ? [...prev, header] : prev.filter((h) => h !== header)
-                                                )
-                                            }
-                                        />
-                                        {header}
-                                    </div>
-                                ))}
+                                    {previewHeaders.map((header) => (
+                                        <div key={"row-" + header}>
+                                            <input
+                                                type="checkbox"
+                                                checked={rowFields.includes(header)}
+                                                onChange={(e) =>
+                                                    setRowFields((prev) =>
+                                                        e.target.checked ? [...prev, header] : prev.filter((h) => h !== header)
+                                                    )
+                                                }
+                                            />
+                                            {header}
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
 
                             <div>
                                 <label>Column Fields:</label>
                                 <div className="controls-div">
-                                {previewHeaders.map((header) => (
-                                    <div key={"col-" + header}>
-                                        <input
-                                            type="checkbox"
-                                            checked={colFields.includes(header)}
-                                            onChange={(e) =>
-                                                setColFields((prev) =>
-                                                    e.target.checked ? [...prev, header] : prev.filter((h) => h !== header)
-                                                )
-                                            }
-                                        />
-                                        {header}
-                                    </div>
-                                ))}
+                                    {previewHeaders.map((header) => (
+                                        <div key={"col-" + header}>
+                                            <input
+                                                type="checkbox"
+                                                checked={colFields.includes(header)}
+                                                onChange={(e) =>
+                                                    setColFields((prev) =>
+                                                        e.target.checked ? [...prev, header] : prev.filter((h) => h !== header)
+                                                    )
+                                                }
+                                            />
+                                            {header}
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
 
                             <div>
                                 <label>Value Fields:</label>
                                 <div className="controls-div">
-                                {previewHeaders.map((header) => (
-                                    <div key={"val-" + header} style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                                        <input
-                                            type="checkbox"
-                                            checked={valFields.includes(header)}
-                                            onChange={(e) => {
-                                                setValFields((prev) =>
-                                                    e.target.checked ? [...prev, header] : prev.filter((h) => h !== header)
-                                                );
+                                    {previewHeaders.map((header) => (
+                                        <div key={"val-" + header} style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={valFields.includes(header)}
+                                                onChange={(e) => {
+                                                    setValFields((prev) =>
+                                                        e.target.checked ? [...prev, header] : prev.filter((h) => h !== header)
+                                                    );
 
-                                                if (!e.target.checked) {
-                                                    setAggregators((prev) => {
-                                                        const copy = { ...prev };
-                                                        delete copy[header];
-                                                        return copy;
-                                                    });
-                                                }
-                                            }}
-                                        />
-                                        {header}
-                                        {valFields.includes(header) && (
-                                            <select
-                                                value={aggregators[header] || "sum"}
-                                                onChange={(e) =>
-                                                    setAggregators((prev) => ({ ...prev, [header]: e.target.value }))
-                                                }
-                                            >
-                                                <option value="sum">Sum</option>
-                                                <option value="count">Count</option>
-                                                <option value="avg">Average</option>
-                                                <option value="min">Min</option>
-                                                <option value="max">Max</option>
-                                            </select>
-                                        )}
-                                    </div>
-                                ))}
+                                                    if (!e.target.checked) {
+                                                        setAggregators((prev) => {
+                                                            const copy = { ...prev };
+                                                            delete copy[header];
+                                                            return copy;
+                                                        });
+                                                    }
+                                                }}
+                                            />
+                                            {header}
+                                            {valFields.includes(header) && (
+                                                <select
+                                                    value={aggregators[header] || "sum"}
+                                                    onChange={(e) =>
+                                                        setAggregators((prev) => ({ ...prev, [header]: e.target.value }))
+                                                    }
+                                                >
+                                                    <option value="sum">Sum</option>
+                                                    <option value="count">Count</option>
+                                                    <option value="avg">Average</option>
+                                                    <option value="min">Min</option>
+                                                    <option value="max">Max</option>
+                                                </select>
+                                            )}
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
 
@@ -226,7 +226,7 @@ function App() {
 
                         {pivot && (
                             <div className="pivot-output">
-                                <h2>📉Pivot Table Output</h2>
+                                <h2>Pivot Table Output</h2>
                                 <div className="scrollable-table">
                                     <table className="pivot-table">
                                         <thead>
