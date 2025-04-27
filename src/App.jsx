@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import Papa from "papaparse";
 import "./App.css";
-
-
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
+import DraggableField from "./DraggableField";
+import DropZone from "./DropZone";
 function App() {
     const [csvData, setCsvData] = useState([]);
     const [previewHeaders, setPreviewHeaders] = useState([]);
@@ -10,7 +12,6 @@ function App() {
     const [colFields, setColFields] = useState([]);
     const [valFields, setValFields] = useState([]);
     const [aggregators, setAggregators] = useState({});
-
 
     const handleFileUpload = (e) => {
         const file = e.target.files[0];
@@ -37,8 +38,7 @@ function App() {
         const result = {};
         const rowKeysSet = new Set();
         const colKeysSet = new Set();
-
-        const countStore = {}; 
+        const countStore = {};
 
         csvData.forEach((row) => {
             const rowKey = rowFields.map((f) => row[f]).join(" / ");
@@ -59,12 +59,10 @@ function App() {
 
                 if (aggType === "count") {
                     result[rowKey][colKey][field] = (result[rowKey][colKey][field] || 0) + 1;
-                } 
-                else {
+                } else {
                     if (!result[rowKey][colKey][field]) {
                         result[rowKey][colKey][field] = aggType === "min" ? value : 0;
                     }
-
                     if (aggType === "sum") result[rowKey][colKey][field] += value;
                     else if (aggType === "avg") {
                         result[rowKey][colKey][field] += value;
@@ -102,183 +100,173 @@ function App() {
         };
     };
 
-
     const pivot = rowFields.length && colFields.length && valFields.length ? getPivotData() : null;
 
-
     return (
-        <div className="app-container">
-            <div>
-                <h2>📂 CSV Pivot Table</h2>
-                <input type="file" accept=".csv" onChange={handleFileUpload} className="file-input" />
-            </div>
+        <DndProvider backend={HTML5Backend}>
+            <div className="app-container">
+                <div>
+                    <h2>📂 CSV Pivot Table</h2>
+                    <input type="file" accept=".csv" onChange={handleFileUpload} className="file-input" />
+                </div>
 
-
-            {csvData.length > 0 && (
-                <>
-                    <div className="preview-table-container">
-                        <h3>🗃️ Full Data Preview</h3>
-                        <div className="scrollable-table">
-                            <table className="preview-table">
-                                <thead>
-                                    <tr>{previewHeaders.map((h) => <th key={h} className="headers">{h}</th>)}</tr>
-                                </thead>
-                                <tbody>
-                                    {csvData.map((row, i) => (
-                                        <tr key={i}>
-                                            {previewHeaders.map((h, j) => (
-                                                <td key={h} className={j === 0 ? "first-column" : ""}>
-                                                    {row[h]}
-                                                </td>
+                {csvData.length > 0 && (
+                    <>
+                        <div className="preview-table-container">
+                            <h3>🗃️ Full Data Preview</h3>
+                            <div className="scrollable-table">
+                                <table className="preview-table">
+                                    <thead>
+                                        <tr>
+                                            {previewHeaders.map((h) => (
+                                                <th key={h} className="headers">{h}</th>
                                             ))}
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        {csvData.map((row, i) => (
+                                            <tr key={i}>
+                                                {previewHeaders.map((h, j) => (
+                                                    <td key={h} className={j === 0 ? "first-column" : ""}>
+                                                        {row[h]}
+                                                    </td>
+                                                ))}
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                    </div>
-                    <div className="output-tables">
-                        <div className="pivot-controls">
-                            <div>
-                                <label>Row Fields:</label>
-                                <div className="controls-div">
-                                    {previewHeaders.map((header) => (
-                                        <div key={"row-" + header}>
-                                            <input
-                                                type="checkbox"
-                                                checked={rowFields.includes(header)}
-                                                onChange={(e) =>
-                                                    setRowFields((prev) =>
-                                                        e.target.checked ? [...prev, header] : prev.filter((h) => h !== header)
-                                                    )
-                                                }
-                                            />
-                                            {header}
-                                        </div>
-                                    ))}
+
+                        <div className="output-tables">
+                            <div className="pivot-controls">
+                                <div className="available-fields">
+                                    <h4>Available Fields</h4>
+                                    <div>
+                                        {previewHeaders
+                                            .filter(header => !rowFields.includes(header) && !colFields.includes(header) && !valFields.includes(header))
+                                            .map((header) => (
+                                                <DraggableField key={header} name={header} />
+                                            ))}
+
+                                    </div>
+
                                 </div>
-                            </div>
 
-                            <div>
-                                <label>Column Fields:</label>
-                                <div className="controls-div">
-                                    {previewHeaders.map((header) => (
-                                        <div key={"col-" + header}>
-                                            <input
-                                                type="checkbox"
-                                                checked={colFields.includes(header)}
-                                                onChange={(e) =>
-                                                    setColFields((prev) =>
-                                                        e.target.checked ? [...prev, header] : prev.filter((h) => h !== header)
-                                                    )
-                                                }
-                                            />
-                                            {header}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
+                                <div className="drop-zones">
+                                    <DropZone
+                                        label="Row Fields :"
+                                        fields={rowFields}
+                                        onDrop={(name) => {
+                                            if (!rowFields.includes(name)) setRowFields(prev => [...prev, name]);
+                                        }}
+                                        onRemove={(name) => setRowFields(prev => prev.filter(f => f !== name))}
+                                    />
 
-                            <div>
-                                <label>Value Fields:</label>
-                                <div className="controls-div">
-                                    {previewHeaders.map((header) => (
-                                        <div key={"val-" + header} style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                                            <input
-                                                type="checkbox"
-                                                checked={valFields.includes(header)}
-                                                onChange={(e) => {
-                                                    setValFields((prev) =>
-                                                        e.target.checked ? [...prev, header] : prev.filter((h) => h !== header)
-                                                    );
+                                    <DropZone
+                                        label="Column Fields :"
+                                        fields={colFields}
+                                        onDrop={(name) => {
+                                            if (!colFields.includes(name)) setColFields(prev => [...prev, name]);
+                                        }}
+                                        onRemove={(name) => setColFields(prev => prev.filter(f => f !== name))}
+                                    />
 
-                                                    if (!e.target.checked) {
-                                                        setAggregators((prev) => {
-                                                            const copy = { ...prev };
-                                                            delete copy[header];
-                                                            return copy;
-                                                        });
-                                                    }
-                                                }}
-                                            />
-                                            {header}
-                                            {valFields.includes(header) && (
+                                    <DropZone
+                                        label="Value Fields :"
+                                        fields={valFields}
+                                        onDrop={(name) => {
+                                            if (!valFields.includes(name)) {
+                                                setValFields(prev => [...prev, name]);
+                                                setAggregators(prev => ({ ...prev, [name]: "sum" })); // Default aggregator
+                                            }
+                                        }}
+                                    >
+                                        {valFields.map((field) => (
+                                            <div key={field} style={{ marginBottom: "8px" }}>
+                                                {field}
                                                 <select
-                                                    value={aggregators[header] || "sum"}
+                                                    value={aggregators[field]}
                                                     onChange={(e) =>
-                                                        setAggregators((prev) => ({ ...prev, [header]: e.target.value }))
+                                                        setAggregators(prev => ({ ...prev, [field]: e.target.value }))
                                                     }
+                                                    style={{ marginLeft: "8px" }}
                                                 >
                                                     <option value="sum">Sum</option>
                                                     <option value="count">Count</option>
                                                     <option value="avg">Average</option>
-                                                    <option value="min">Min</option>
-                                                    <option value="max">Max</option>
+                                                    <option value="min">Minimum</option>
+                                                    <option value="max">Maximum</option>
                                                 </select>
-                                            )}
-                                        </div>
-                                    ))}
+                                            </div>
+                                        ))}
+                                    </DropZone>
+
+
                                 </div>
                             </div>
 
-                        </div>
 
-
-                        {pivot && (
-                            <div className="pivot-output">
-                                <h2>Pivot Table Output</h2>
-                                <div className="scrollable-table">
-                                    <table className="pivot-table">
-                                        <thead>
-                                            <tr>
-                                                <th>{rowFields.join(" + ")}</th>
-                                                {pivot.colKeys.map((col) => <th key={col} className="headers">{col}</th>)}
-                                                <th>Total</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {pivot.rowKeys.map((rowKey) => {
-                                                const row = pivot.data[rowKey] || {};
-                                                const total = pivot.colKeys.reduce(
-                                                    (sum, colKey) => sum + (row[colKey] ? Object.values(row[colKey]).reduce((s, val) => s + (parseFloat(val) || 0), 0) : 0),
-                                                    0
-                                                );
-
-                                                return (
-                                                    <tr key={rowKey}>
-                                                        <td className="highlight">{rowKey}</td>
-                                                        {pivot.colKeys.map((colKey) => {
-                                                            const fieldValues = row[colKey] || {};
-                                                            return (
-                                                                <td key={colKey}>
-                                                                    {valFields.map((field, fieldIndex) => {
-                                                                        const value = fieldValues[field] || 0;
-                                                                        return <div key={fieldIndex}>{`${field}: ${value}`}</div>;
-                                                                    })}
-                                                                </td>
-                                                            );
-                                                        })}
-                                                        <td className="grand-total">{total}</td>
-                                                    </tr>
-                                                );
-                                            })}
-                                        </tbody>
-                                        <tfoot>
-                                            <tr>
-                                                <td className="grand-total">Grand Total</td>
-                                                {pivot.colKeys.map((colKey) => {
-                                                    const colTotal = pivot.rowKeys.reduce((sum, rowKey) => {
-                                                        const cell = pivot.data[rowKey]?.[colKey] || {};
-                                                        return (
+                            {pivot && (
+                                <div className="pivot-output">
+                                    <h2>Pivot Table Output</h2>
+                                    <div className="scrollable-table">
+                                        <table className="pivot-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>{rowFields.join(" + ")}</th>
+                                                    {pivot.colKeys.map((col) => (
+                                                        <th key={col} className="headers">{col}</th>
+                                                    ))}
+                                                    <th>Total</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {pivot.rowKeys.map((rowKey) => {
+                                                    const row = pivot.data[rowKey] || {};
+                                                    const total = pivot.colKeys.reduce(
+                                                        (sum, colKey) =>
                                                             sum +
-                                                            valFields.reduce((valSum, field) => valSum + (parseFloat(cell[field]) || 0), 0)
-                                                        );
-                                                    }, 0);
-                                                    return <td key={colKey}>{colTotal}</td>;
+                                                            (row[colKey]
+                                                                ? Object.values(row[colKey]).reduce(
+                                                                    (s, val) => s + (parseFloat(val) || 0),
+                                                                    0
+                                                                )
+                                                                : 0),
+                                                        0
+                                                    );
+
+                                                    return (
+                                                        <tr key={rowKey}>
+                                                            <td className="highlight">{rowKey}</td>
+                                                            {pivot.colKeys.map((colKey) => {
+                                                                const fieldValues = row[colKey] || {};
+                                                                return (
+                                                                    <td key={colKey}>
+                                                                        {valFields.map((field, fieldIndex) => {
+                                                                            const value = fieldValues[field] || 0;
+                                                                            return <div key={fieldIndex}>{`${field}: ${value}`}</div>;
+                                                                        })}
+                                                                    </td>
+                                                                );
+                                                            })}
+                                                            <td className="grand-total">{total}</td>
+                                                        </tr>
+                                                    );
                                                 })}
-                                                <td className="grand-total">
-                                                    {
-                                                        pivot.rowKeys.reduce((rowSum, rowKey) =>
+                                            </tbody>
+                                            <tfoot>
+                                                <tr>
+                                                    <td className="grand-total">Grand Total</td>
+                                                    {pivot.colKeys.map((colKey) => {
+                                                        const colTotal = pivot.rowKeys.reduce((sum, rowKey) => {
+                                                            const cell = pivot.data[rowKey]?.[colKey] || {};
+                                                            return sum + valFields.reduce((valSum, field) => valSum + (parseFloat(cell[field]) || 0), 0);
+                                                        }, 0);
+                                                        return <td key={colKey}>{colTotal}</td>;
+                                                    })}
+                                                    <td className="grand-total">
+                                                        {pivot.rowKeys.reduce((rowSum, rowKey) =>
                                                             rowSum +
                                                             pivot.colKeys.reduce((colSum, colKey) => {
                                                                 const cell = pivot.data[rowKey]?.[colKey] || {};
@@ -286,28 +274,21 @@ function App() {
                                                                     colSum +
                                                                     valFields.reduce((valSum, field) => valSum + (parseFloat(cell[field]) || 0), 0)
                                                                 );
-                                                            }, 0),
-                                                            0)}
-                                                </td>
-                                            </tr>
-                                        </tfoot>
-
-                                    </table>
+                                                            }, 0)
+                                                            , 0)}
+                                                    </td>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
                                 </div>
-                            </div>
-                        )}
-                    </div>
-                </>
-            )}
-        </div>
+                            )}
+                        </div>
+                    </>
+                )}
+            </div>
+        </DndProvider>
     );
 }
 
 export default App;
-
-
-
-
-
-
-
