@@ -7,7 +7,6 @@ const PivotTableOutput = ({
 }) => {
   if (!pivotData || !pivotData.colKeys || !pivotData.rowKeys) return null;
 
-  // Build column headers for each level in colAttrs
   const getColHeaderRows = () => {
     const headerRows = [];
 
@@ -51,24 +50,31 @@ const PivotTableOutput = ({
         );
         i += span;
       }
+      row.push(
+        <th>Row total</th>
+      )
 
       headerRows.push(<tr key={`header-row-${level}`}>{row}</tr>);
     }
 
-    // // Value row (e.g., "Units Sold (sum)")
-    // headerRows.push(
-    //   <tr key="value-row">
-    //     {pivotData.colKeys.map((_, j) => (
-    //       <th key={`val-${j}`} className="pivot-subheader center">
-    //         {valAttrs.length > 0 ? valAttrs.join(", ") : "Value"}<br />
-    //         ({aggregatorName})
-    //       </th>
-    //     ))}
-    //   </tr>
-    // );
+   
 
     return headerRows;
   };
+
+  // Compute column totals
+  const columnTotals = pivotData.colKeys.map((colKey) => {
+    let total = 0;
+    pivotData.rowKeys.forEach((rowKey) => {
+      const agg = pivotData.getAggregator(rowKey, colKey);
+      const val = parseFloat(agg?.value());
+      if (!isNaN(val)) total += val;
+    });
+    return total;
+  });
+
+  // Compute grand total
+  const grandTotal = columnTotals.reduce((sum, val) => sum + val, 0);
 
   return (
     <div className="pivot-table-container">
@@ -83,7 +89,7 @@ const PivotTableOutput = ({
           {pivotData.rowKeys.map((rowKey, i) => {
             const row = [];
 
-            // Render row headers with rowspan merging
+            // Row labels
             rowKey.forEach((val, level) => {
               const prevVal = i > 0 ? pivotData.rowKeys[i - 1][level] : null;
               if (prevVal !== val) {
@@ -104,23 +110,43 @@ const PivotTableOutput = ({
               }
             });
 
-            // Data cells
+            // Data cells and row total
+            let rowTotal = 0;
             const dataCells = pivotData.colKeys.map((colKey, j) => {
               const agg = pivotData.getAggregator(rowKey, colKey);
+              const val = parseFloat(agg?.value());
+              if (!isNaN(val)) rowTotal += val;
               return (
                 <td key={`data-${i}-${j}`} className="pivot-cell center">
-                  {agg && agg.value() != null ? agg.value() : ""}
+                  {agg?.value() != null ? agg.value() : ""}
                 </td>
               );
             });
 
-            return (
-              <tr key={`row-${i}`}>
-                {row}
-                {dataCells}
-              </tr>
+            row.push(...dataCells);
+            row.push(
+              <td key={`row-total-${i}`} className="pivot-cell center bold">
+                {rowTotal}
+              </td>
             );
+
+            return <tr key={`row-${i}`}>{row}</tr>;
           })}
+
+          {/* Column totals row */}
+          <tr key="column-totals">
+            {rowAttrs.map((_, i) => (
+              <td key={`total-label-${i}`} className="pivot-left-header bold">
+                {i === 0 ? "Column Total" : ""}
+              </td>
+            ))}
+            {columnTotals.map((val, j) => (
+              <td key={`col-total-${j}`} className="pivot-cell center bold">
+                {val}
+              </td>
+            ))}
+            <td className="pivot-cell center bold">{grandTotal}</td>
+          </tr>
         </tbody>
       </table>
     </div>
