@@ -4,8 +4,6 @@ const PivotTableOutput = ({
   pivotData,
   rowAttrs = [],
   colAttrs = [],
-  valAttrs = [],
-  aggregatorName = "count",
 }) => {
   if (!pivotData || !pivotData.colKeys || !pivotData.rowKeys) return null;
 
@@ -57,17 +55,17 @@ const PivotTableOutput = ({
       headerRows.push(<tr key={`header-row-${level}`}>{row}</tr>);
     }
 
-    // Value row (e.g., "Units Sold (sum)")
-    headerRows.push(
-      <tr key="value-row">
-        {pivotData.colKeys.map((_, j) => (
-          <th key={`val-${j}`} className="pivot-subheader center">
-            {valAttrs.length > 0 ? valAttrs.join(", ") : "Value"}<br />
-            ({aggregatorName})
-          </th>
-        ))}
-      </tr>
-    );
+    // // Value row (e.g., "Units Sold (sum)")
+    // headerRows.push(
+    //   <tr key="value-row">
+    //     {pivotData.colKeys.map((_, j) => (
+    //       <th key={`val-${j}`} className="pivot-subheader center">
+    //         {valAttrs.length > 0 ? valAttrs.join(", ") : "Value"}<br />
+    //         ({aggregatorName})
+    //       </th>
+    //     ))}
+    //   </tr>
+    // );
 
     return headerRows;
   };
