@@ -24,6 +24,7 @@ const PivotTableOutput = ({
               {rowAttrs[i]}
             </th>
           );
+          console.log(rowAttrs[i]);
         }
       }
 
@@ -50,6 +51,7 @@ const PivotTableOutput = ({
         );
         i += span;
       }
+      
       row.push(
         <th>Row total</th>
       )

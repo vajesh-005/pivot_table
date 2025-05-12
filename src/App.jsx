@@ -78,20 +78,7 @@ function App() {
       });
     });
 
-    valFields.forEach((field) => {
-      const aggType = aggregators[field] || "sum";
-      if (aggType === "avg") {
-        Object.keys(result).forEach((rowKey) => {
-          Object.keys(result[rowKey]).forEach((colKey) => {
-            const sum = result[rowKey][colKey][field];
-            const count = countStore[rowKey]?.[colKey]?.[field] || 1;
-            result[rowKey][colKey][field] = sum / count;
-          });
-        });
-      }
-    });
 
-    // ADD this getAggregator function
     const getAggregator = (rowKeyArr, colKeyArr) => {
       const rowKey = rowKeyArr.join(" / ");
       const colKey = colKeyArr.join(" / ");

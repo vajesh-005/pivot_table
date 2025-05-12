@@ -1,6 +1,6 @@
 import { useDrop } from "react-dnd";
 
-const DropZone = ({ label, onDrop, fields, onRemove, isValueZone = false, aggregators = {}, onAggregatorChange }) => {
+const DropZone = ({ label, onDrop, fields, onRemove, aggregators = {}, onAggregatorChange }) => {
     const [{ isOver }, drop] = useDrop({
         accept: "FIELD",
         drop: (item) => onDrop(item.name),
@@ -17,9 +17,8 @@ const DropZone = ({ label, onDrop, fields, onRemove, isValueZone = false, aggreg
                     <span>{field}</span>
                     {label === "Value Fields :" && (
                         <select
-                            value={aggregators[field] || "sum"} // Use 'field' instead of 'name'
+                            value={aggregators[field] || "sum"} 
                             onChange={(e) => {
-                                // Call the onAggregatorChange passed from the parent component
                                 onAggregatorChange(field, e.target.value);
                             }}
                         >
