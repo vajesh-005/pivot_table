@@ -130,11 +130,30 @@ function App() {
       };
     };
 
-    return {
-      rowKeys: Array.from(rowKeysSet).map(k => k.split(" / ")), // Split back into array
-      colKeys: Array.from(colKeysSet).map(k => k.split(" / ")),
-      getAggregator,
-    };
+    const sortedRowKeys = Array.from(rowKeysSet).map(k => k.split(" / "));
+sortedRowKeys.sort((a, b) => {
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] < b[i]) return -1;
+    if (a[i] > b[i]) return 1;
+  }
+  return 0;
+});
+
+const sortedColKeys = Array.from(colKeysSet).map(k => k.split(" / "));
+sortedColKeys.sort((a, b) => {
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] < b[i]) return -1;
+    if (a[i] > b[i]) return 1;
+  }
+  return 0;
+});
+
+return {
+  rowKeys: sortedRowKeys,
+  colKeys: sortedColKeys,
+  getAggregator,
+};
+
   };
 
 
@@ -147,7 +166,7 @@ function App() {
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="app-container">
-        <h2>📂 CSV Pivot Table</h2>
+        <h2>📂 CSV Pivot Table</h2>  
         <input type="file" accept=".csv" onChange={handleFileUpload} className="file-input" />
 
         {csvData.length > 0 && (

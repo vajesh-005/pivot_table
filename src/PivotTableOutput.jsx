@@ -9,60 +9,79 @@ const PivotTableOutput = ({
 
   const getColHeaderRows = () => {
     const headerRows = [];
-
+  
     for (let level = 0; level < colAttrs.length; level++) {
       const row = [];
-
+    
+      // Add row attribute headers only on first column header row
       if (level === 0) {
         for (let i = 0; i < rowAttrs.length; i++) {
           row.push(
             <th
               key={`row-label-${i}`}
-              rowSpan={colAttrs.length + 1}
+              rowSpan={colAttrs.length}
               className="pivot-header"
             >
               {rowAttrs[i]}
             </th>
           );
-          console.log(rowAttrs[i]);
         }
       }
-
+    
       let i = 0;
       while (i < pivotData.colKeys.length) {
-        const colKey = pivotData.colKeys[i];
-        const value = colKey[level];
-        let span = 1;
+        const currentKey = pivotData.colKeys[i];
+        const value = currentKey[level];
+    
+        let colSpan = 1;
+    
+        // Count how many following columns have same value at this level *and* same parents
         for (let j = i + 1; j < pivotData.colKeys.length; j++) {
-          if (pivotData.colKeys[j][level] === value) {
-            span++;
+          const nextKey = pivotData.colKeys[j];
+    
+          const allParentsMatch = currentKey
+            .slice(0, level)
+            .every((v, idx) => v === nextKey[idx]);
+    
+          if (allParentsMatch && nextKey[level] === value) {
+            colSpan++;
           } else {
             break;
           }
         }
+    
         row.push(
           <th
             key={`col-header-${level}-${i}`}
-            colSpan={span}
+            colSpan={colSpan}
             className="pivot-header center"
           >
             {value}
           </th>
         );
-        i += span;
+    
+        i += colSpan;
       }
-      
-      row.push(
-        <th>Row total</th>
-      )
-
+    
+      // Only on top row: add row total header
+      if (level === 0) {
+        row.push(
+          <th
+            rowSpan={colAttrs.length}
+            className="pivot-header center"
+          >
+            Row Total
+          </th>
+        );
+      }
+    
       headerRows.push(<tr key={`header-row-${level}`}>{row}</tr>);
     }
-
-   
-
+    
+  
     return headerRows;
   };
+  
 
   // Compute column totals
   const columnTotals = pivotData.colKeys.map((colKey) => {
