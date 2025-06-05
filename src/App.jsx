@@ -33,8 +33,17 @@ function App() {
   };
 
   const getPivotData = () => {
-    if (!csvData.length || !rowFields.length || !colFields.length || !valFields.length) {
-      return { rowKeys: [], colKeys: [], getAggregator: () => ({ value: () => null }) };
+    if (
+      !csvData.length ||
+      !rowFields.length ||
+      !colFields.length ||
+      !valFields.length
+    ) {
+      return {
+        rowKeys: [],
+        colKeys: [],
+        getAggregator: () => ({ value: () => null }),
+      };
     }
 
     const result = {};
@@ -60,7 +69,8 @@ function App() {
         const value = parseFloat(raw) || 0;
 
         if (aggType === "count") {
-          result[rowKey][colKey][field] = (result[rowKey][colKey][field] || 0) + 1;
+          result[rowKey][colKey][field] =
+            (result[rowKey][colKey][field] || 0) + 1;
         } else {
           if (!result[rowKey][colKey][field]) {
             result[rowKey][colKey][field] = aggType === "min" ? value : 0;
@@ -68,16 +78,22 @@ function App() {
           if (aggType === "sum") result[rowKey][colKey][field] += value;
           else if (aggType === "avg") {
             result[rowKey][colKey][field] += value;
-            countStore[rowKey][colKey][field] = (countStore[rowKey][colKey][field] || 0) + 1;
+            countStore[rowKey][colKey][field] =
+              (countStore[rowKey][colKey][field] || 0) + 1;
           } else if (aggType === "min") {
-            result[rowKey][colKey][field] = Math.min(result[rowKey][colKey][field], value);
+            result[rowKey][colKey][field] = Math.min(
+              result[rowKey][colKey][field],
+              value
+            );
           } else if (aggType === "max") {
-            result[rowKey][colKey][field] = Math.max(result[rowKey][colKey][field], value);
+            result[rowKey][colKey][field] = Math.max(
+              result[rowKey][colKey][field],
+              value
+            );
           }
         }
       });
     });
-
 
     const getAggregator = (rowKeyArr, colKeyArr) => {
       const rowKey = rowKeyArr.join(" / ");
@@ -130,44 +146,50 @@ function App() {
       };
     };
 
-    const sortedRowKeys = Array.from(rowKeysSet).map(k => k.split(" / "));
-sortedRowKeys.sort((a, b) => {
-  for (let i = 0; i < a.length; i++) {
-    if (a[i] < b[i]) return -1;
-    if (a[i] > b[i]) return 1;
-  }
-  return 0;
-});
+    const sortedRowKeys = Array.from(rowKeysSet).map((k) => k.split(" / "));
+    sortedRowKeys.sort((a, b) => {
+      for (let i = 0; i < a.length; i++) {
+        if (a[i] < b[i]) return -1;
+        if (a[i] > b[i]) return 1;
+      }
+      return 0;
+    });
 
-const sortedColKeys = Array.from(colKeysSet).map(k => k.split(" / "));
-sortedColKeys.sort((a, b) => {
-  for (let i = 0; i < a.length; i++) {
-    if (a[i] < b[i]) return -1;
-    if (a[i] > b[i]) return 1;
-  }
-  return 0;
-});
+    const sortedColKeys = Array.from(colKeysSet).map((k) => k.split(" / "));
+    sortedColKeys.sort((a, b) => {
+      for (let i = 0; i < a.length; i++) {
+        if (a[i] < b[i]) return -1;
+        if (a[i] > b[i]) return 1;
+      }
+      return 0;
+    });
 
-return {
-  rowKeys: sortedRowKeys,
-  colKeys: sortedColKeys,
-  getAggregator,
-};
-
+    return {
+      rowKeys: sortedRowKeys,
+      colKeys: sortedColKeys,
+      getAggregator,
+    };
   };
-
 
   const onAggregatorChange = (name, value) => {
     setAggregators((prev) => ({ ...prev, [name]: value }));
   };
 
-  const pivot = rowFields.length && colFields.length && valFields.length ? getPivotData() : null;
+  const pivot =
+    rowFields.length && colFields.length && valFields.length
+      ? getPivotData()
+      : null;
 
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="app-container">
-        <h2>📂 CSV Pivot Table</h2>  
-        <input type="file" accept=".csv" onChange={handleFileUpload} className="file-input" />
+        <h2>📂 CSV Pivot Table</h2>
+        <input
+          type="file"
+          accept=".csv"
+          onChange={handleFileUpload}
+          className="file-input"
+        />
 
         {csvData.length > 0 && (
           <>
@@ -184,7 +206,13 @@ return {
               setAggregators={setAggregators}
               onAggregatorChange={onAggregatorChange}
             />
-            {pivot && <PivotTableOutput pivotData={pivot} rowAttrs={rowFields} colAttrs={colFields} />}
+            {pivot && (
+              <PivotTableOutput
+                pivotData={pivot}
+                rowAttrs={rowFields}
+                colAttrs={colFields}
+              />
+            )}
           </>
         )}
       </div>

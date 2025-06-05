@@ -31,3 +31,6 @@ export default [
     },
   },
 ]
+
+
+//summary : catches bugs early , optimized for react fast refresh , code consistency 
